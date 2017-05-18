@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/golang/protobuf/proto"
+	//"github.com/golang/protobuf/proto"
 
 	"github.com/cloudfoundry/noaa/consumer"
 
@@ -71,22 +71,27 @@ func DefaultConfig() *Config {
 	}
 }
 
-func (s *GNozzle) AppLogs(ctx context.Context, req *pb.LogRequest) {
-	logger.Printf("Fetching app logs: %v\n", req)
+func (s *GNozzle) AppLogs(ctx context.Context, req *pb.LogRequest) string {
+	fmt.Printf("Fetching app logs: %v\n", req)
 	conf := DefaultConfig()
-	token := s.reqEntity.token
+	token := s.reqEntity.Token
 	if token == "" {
-		token := conf.Token
+		token = conf.Token
 	}
-	noaaConsumer := consumer.New(config.DopplerEndpoint, &tls.Config{
+	noaaConsumer := consumer.New(conf.DopplerEndpoint, &tls.Config{
 		InsecureSkipVerify: conf.SkipSslValidation,
 	}, nil)
 	events, errs := noaaConsumer.Firehose(conf.FirehoseSubscriptionID, token)
-	return s.reqEntity.token
+	fmt.Printf("Forwarding events: %s", events)
+	if errs != nil {
+		fmt.Printf("consumer error", errs)
+	}
+	return token
 }
 
 func main() {
 	logger := log.New(os.Stdout, ">>> ", 0)
+	logger.Printf("Starting gRPC server on port: %d", &port)
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		grpclog.Fatalf("failed to listen: %v", err)

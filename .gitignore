@@ -1,0 +1,9 @@
+internal-core
+.project
+*.swp
+.#*
+\#*
+my.db
+dist
+*pprof
+vendor
